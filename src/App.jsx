@@ -3,7 +3,7 @@ import { InventoryTable } from "./components/InventoryTable";
 import { InventoryForm } from "./components/InventoryForm";
 import { CATEGORIES } from "./constants/categories";
 import { generateSeedData } from "./utils/seedData";
-import { Package } from "lucide-react";
+import { Package, AlertCircle } from 'lucide-react';
 
 export default function App() {
   const [items, setItems] = useState([]);
@@ -11,15 +11,29 @@ export default function App() {
   const [sortField, setSortField] = useState("name");
   const [sortDirection, setSortDirection] = useState("asc");
   const [editingItem, setEditingItem] = useState(null);
+  const [noData, setNoData] = useState(false);
 
   useEffect(() => {
     const storedItems = localStorage.getItem("inventoryItems");
-    setItems(storedItems ? JSON.parse(storedItems) : generateSeedData());
+    if (storedItems) {
+      const parsedItems = JSON.parse(storedItems);
+      if (parsedItems.length > 0) {
+        setItems(parsedItems);
+      } else {
+        setNoData(true);
+      }
+    } else {
+      setNoData(true);
+    }
   }, []);
 
-
   useEffect(() => {
-    localStorage.setItem("inventoryItems", JSON.stringify(items));
+    if (items.length > 0) {
+      localStorage.setItem("inventoryItems", JSON.stringify(items));
+      setNoData(false);
+    } else {
+      setNoData(true);
+    }
   }, [items]);
 
   const handleAddItem = useCallback(
@@ -85,30 +99,39 @@ export default function App() {
         <div className="space-y-4">
           <InventoryForm onSubmit={handleAddItem} editingItem={editingItem} />
 
-          <div className="flex justify-between items-center">
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              {CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-          </div>
+          {noData ? (
+            <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-md flex items-center">
+              <AlertCircle className="mr-3" />
+              <p>No inventory data available. Add some items to get started!</p>
+            </div>
+          ) : (
+            <>
+              <div className="flex justify-between items-center">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  {CATEGORIES.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
-            <InventoryTable
-              items={filteredItems}
-              onEdit={handleEditItem}
-              onDelete={handleDeleteItem}
-              sortField={sortField}
-              sortDirection={sortDirection}
-              onSort={handleSort}
-            />
-          </div>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                <InventoryTable
+                  items={filteredItems}
+                  onEdit={handleEditItem}
+                  onDelete={handleDeleteItem}
+                  sortField={sortField}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

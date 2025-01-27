@@ -6,8 +6,8 @@ export const InventoryForm = ({ onSubmit, editingItem }) => {
   const [formData, setFormData] = useState({
     name: "",
     category: CATEGORIES[1],
-    quantity: "",
-    price: "",
+    quantity: 0,
+    price: 0,
   });
 
   useEffect(() => {
@@ -23,9 +23,28 @@ export const InventoryForm = ({ onSubmit, editingItem }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
-    if (!editingItem) {
-      setFormData({ name: "", category: CATEGORIES[1], quantity: "", price: "" });
+    onSubmit({
+      ...formData,
+      quantity: Number(formData.quantity),
+      price: Number(formData.price),
+    });
+    // Clear the form fields after submission
+    setFormData({ name: "", category: CATEGORIES[1], quantity: 0, price: 0 });
+  };
+
+  const handleInputChange = (e, field) => {
+    const value = e.target.value;
+    if (field === "quantity" || field === "price") {
+      // Allow empty string during editing and convert to number otherwise
+      setFormData({
+        ...formData,
+        [field]: value === "" ? "" : Number(value),
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [field]: value,
+      });
     }
   };
 
@@ -46,7 +65,7 @@ export const InventoryForm = ({ onSubmit, editingItem }) => {
             type="text"
             required
             value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            onChange={(e) => handleInputChange(e, "name")}
             className={inputClasses}
           />
         </div>
@@ -54,9 +73,7 @@ export const InventoryForm = ({ onSubmit, editingItem }) => {
           <label className={labelClasses}>Category</label>
           <select
             value={formData.category}
-            onChange={(e) =>
-              setFormData({ ...formData, category: e.target.value })
-            }
+            onChange={(e) => handleInputChange(e, "category")}
             className={inputClasses}
           >
             {CATEGORIES.slice(1).map((category) => (
@@ -70,12 +87,11 @@ export const InventoryForm = ({ onSubmit, editingItem }) => {
           <label className={labelClasses}>Quantity</label>
           <input
             type="number"
+            placeholder="0"
             required
             min="0"
-            value={formData.quantity}
-            onChange={(e) =>
-              setFormData({ ...formData, quantity: Number(e.target.value) })
-            }
+            value={formData.quantity === 0 ? "" : formData.quantity}
+            onChange={(e) => handleInputChange(e, "quantity")}
             className={inputClasses}
           />
         </div>
@@ -83,13 +99,12 @@ export const InventoryForm = ({ onSubmit, editingItem }) => {
           <label className={labelClasses}>Price (₹)</label>
           <input
             type="number"
+            placeholder="0"
             required
             min="0"
             step="0.01"
-            value={formData.price}
-            onChange={(e) =>
-              setFormData({ ...formData, price: Number(e.target.value) })
-            }
+            value={formData.price === 0 ? "" : formData.price}
+            onChange={(e) => handleInputChange(e, "price")}
             className={inputClasses}
           />
         </div>
